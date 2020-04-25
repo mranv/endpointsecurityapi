@@ -11,14 +11,10 @@
             "id": "02f523618998495e",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "README.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "README"
+              "title": "New tab"
             }
           }
         ]
@@ -94,7 +90,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "README.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +99,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for README"
+              "title": "Backlinks"
             }
           },
           {
@@ -113,12 +108,11 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "README.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from README"
+              "title": "Outgoing links"
             }
           },
           {
@@ -142,13 +136,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "README.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of README"
+              "title": "Outline"
             }
           }
         ]
@@ -171,18 +164,21 @@
   },
   "active": "02f523618998495e",
   "lastOpenFiles": [
-    "Untitled.canvas",
+    "code/MonitoringSystemEventsWithEndpointSecurity.zip",
+    "SampleEndpointApp.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings",
+    "SampleEndpointApp.xcodeproj/project.xcworkspace/xcshareddata",
+    "SampleEndpointApp.xcodeproj/project.xcworkspace",
+    "SampleEndpointApp.xcodeproj/project.pbxproj",
+    "SampleEndpointApp.xcodeproj",
+    "SampleEndpointApp/Assets.xcassets/AppIcon.appiconset/Contents.json",
+    "SampleEndpointApp/Assets.xcassets/AppIcon.appiconset",
+    "SampleEndpointApp/Assets.xcassets/Contents.json",
+    "SampleEndpointApp/Base.lproj/Main.storyboard",
+    "SampleEndpointApp/main.m",
     "README.md",
-    "Welcome.md",
-    "assets/mermid/es-event-types.mermaid",
-    "assets/mermid/es-early-boot.mermaid",
-    "assets/mermid/es-client-flow.mermaid",
-    "assets/mermid/es-caching.mermaid",
-    "assets/mermid/es-architecture.mermaid",
-    "assets/mermid",
-    "es-event-types.mermaid",
-    "es-early-boot.mermaid",
-    "es-client-flow.mermaid",
-    "es-caching.mermaid"
+    "docs/README.md",
+    "code/README.md",
+    "Untitled.canvas",
+    "Welcome.md"
   ]
 }
