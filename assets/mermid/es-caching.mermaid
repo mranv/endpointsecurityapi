@@ -1,0 +1,43 @@
+flowchart TD
+    E[Event Occurs] --> CE{Cached Entry Exists?}
+    
+    CE -->|Yes| CMP{Compare with Cache}
+    CE -->|No| D[Deliver to Clients]
+    
+    CMP -->|Match| AR[Apply Cached Result]
+    CMP -->|No Match| D
+    
+    D --> MULTI{Multiple Clients?}
+    
+    MULTI -->|Yes| C1[Client 1 Response]
+    MULTI -->|Yes| C2[Client 2 Response]
+    MULTI -->|No| SR[Single Response]
+    
+    C1 --> COMB[Combine Responses]
+    C2 --> COMB
+    
+    COMB --> MR[Most Restrictive Rule Applied]
+    SR --> FR[Final Response]
+    MR --> FR
+    
+    FR -->|cache=true| ADDCACHE[Add to Cache]
+    FR -->|cache=false| NOCACHE[Skip Cache]
+    
+    ADDCACHE --> RET[Return Result to Kernel]
+    NOCACHE --> RET
+    AR --> RET
+    
+    subgraph "Cache Invalidation"
+        INV[File Modified/Deleted]
+        CONNECT[New Client Connects]
+        DISCONNECT[Client Disconnects]
+        CLEAR[es_clear_cache() Called]
+        
+        INV --> INVC[Invalidate Cache Entry]
+        CONNECT --> INVC
+        DISCONNECT --> INVC
+        CLEAR --> INVC
+    end
+    
+    style ADDCACHE fill:#9cf,stroke:#333,stroke-width:2px
+    style INVC fill:#f99,stroke:#333,stroke-width:2px

@@ -1,0 +1,33 @@
+sequenceDiagram
+    participant App as ES Client Application
+    participant ES as EndpointSecurity Framework
+    participant K as Kernel
+    
+    App->>ES: es_new_client()
+    ES-->>App: client handle + event handler block
+    App->>ES: es_subscribe(events)
+    ES-->>App: subscription result
+    
+    App->>App: dispatch_main()
+    
+    K->>ES: Event occurs
+    ES->>ES: Enrich event data
+    
+    alt is AUTH event
+        ES->>App: Deliver AUTH message
+        App->>App: Process message
+        App->>ES: es_respond_auth_result()
+        ES->>K: Apply response
+    else is NOTIFY event
+        ES->>App: Deliver NOTIFY message
+        App->>App: Process message
+        ES->>K: Operation already continued
+    end
+    
+    opt Async processing needed
+        App->>App: es_copy_message()
+        App->>App: Queue work on async queue
+        App->>App: Process later
+        App->>ES: es_respond_auth_result() if needed
+        App->>App: es_free_message()
+    end

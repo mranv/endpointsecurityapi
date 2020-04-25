@@ -1,0 +1,25 @@
+flowchart TD
+    K[Kernel Event] --> ES[EndpointSecurity Subsystem]
+    ES --> |"Intercept & Enrich"| MSG[Message Creation]
+    MSG --> |"Wrapped in envelope"| Q[Message Queue]
+    Q --> |"Simultaneously deliver to subscribed clients"| C1[ES Client 1]
+    Q --> |"Simultaneously deliver to subscribed clients"| C2[ES Client 2]
+    Q --> |"Simultaneously deliver to subscribed clients"| C3[ES Client 3]
+    
+    C1 --> |"if AUTH event"| R1[Response required]
+    C2 --> |"if AUTH event"| R2[Response required]
+    C3 --> |"if AUTH event"| R3[Response required]
+    
+    R1 --> RESP[Combined Response]
+    R2 --> RESP
+    R3 --> RESP
+    
+    RESP --> |"ALLOW/DENY"| K2[Kernel Operation Continues]
+    
+    subgraph "Cache System"
+        RESP --> CACHE[Global Cache]
+        CACHE --> |"Future similar events"| Q
+    end
+    
+    style ES fill:#f96,stroke:#333,stroke-width:2px
+    style CACHE fill:#9cf,stroke:#333,stroke-width:2px

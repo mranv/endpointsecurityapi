@@ -1,0 +1,24 @@
+flowchart LR
+    E[System Event] --> ES[EndpointSecurity]
+    
+    ES --> N[NOTIFY Event]
+    ES --> A[AUTH Event]
+    
+    subgraph "NOTIFY Events"
+        N --> NF[Asynchronous]
+        NF --> NF1[Operation continues immediately]
+        NF --> NF2[Contains result field]
+        NF --> NF3[Always delivered unless muted]
+    end
+    
+    subgraph "AUTH Events"
+        A --> AF[Synchronous]
+        AF --> AF1[Operation blocked until response]
+        AF --> AF2[Has deadline field]
+        AF --> AF3[Only delivered if no cached result]
+        AF --> AF4[Requires client response]
+        AF --> AF5[Can be cached]
+    end
+    
+    style N fill:#aaf,stroke:#33a,stroke-width:2px
+    style A fill:#faa,stroke:#a33,stroke-width:2px

@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant User
+    participant System as macOS System
+    participant SysExt as System Extension
+    participant ES as EndpointSecurity Framework
+    participant Apps as Third-Party Apps
+    
+    System->>System: Boot Start
+    System->>SysExt: Load Early Boot Extensions
+    
+    SysExt->>ES: Initialize (es_new_client)
+    ES-->>SysExt: Client Handle
+    
+    SysExt->>ES: First Subscribe Call
+    ES-->>SysExt: Subscription Result
+    
+    alt All Early Boot Extensions Ready
+        System->>Apps: Allow Third-Party Apps to Execute
+    else Early Boot Deadline Expires
+        System->>System: Deadline Timer
+        System->>Apps: Force Allow Third-Party Apps
+    end
+    
+    User->>System: Try to Use Apps
+    
+    Note over User,Apps: System Extensions installed in /Applications<br>Protected by System Integrity Protection<br>Protected from root user unload
