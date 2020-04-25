@@ -1,10 +1,89 @@
-# EndpointSecurity API Documentation
+# EndpointSecurity Framework Documentation
 
-This repository contains documentation and diagrams about Apple's EndpointSecurity API framework, which provides system event monitoring and security capabilities on macOS.
+This repository contains comprehensive documentation and visualizations for Apple's EndpointSecurity Framework, which provides system event monitoring and security capabilities on macOS.
 
-## Diagrams
+## Overview
 
-### EndpointSecurity Event Types
+The EndpointSecurity Framework (introduced in macOS Catalina) is designed as a modern replacement for:
+- Kernel Extensions (KEXTs)
+- Kauth KPI
+- Unsupported Mac kernel framework
+- OpenBSM audit trail
+
+It allows security products to monitor and control system events from user space without kernel extensions, improving system stability and security.
+
+## Core Concepts Visualized
+
+### EndpointSecurity Architecture
+
+```mermaid
+flowchart TD
+    K[Kernel Event] --> ES[EndpointSecurity Subsystem]
+    ES --> |"Intercept & Enrich"| MSG[Message Creation]
+    MSG --> |"Wrapped in envelope"| Q[Message Queue]
+    Q --> |"Simultaneously deliver to subscribed clients"| C1[ES Client 1]
+    Q --> |"Simultaneously deliver to subscribed clients"| C2[ES Client 2]
+    Q --> |"Simultaneously deliver to subscribed clients"| C3[ES Client 3]
+
+    C1 --> |"if AUTH event"| R1[Response required]
+    C2 --> |"if AUTH event"| R2[Response required]
+    C3 --> |"if AUTH event"| R3[Response required]
+
+    R1 --> RESP[Combined Response]
+    R2 --> RESP
+    R3 --> RESP
+
+    RESP --> |"ALLOW/DENY"| K2[Kernel Operation Continues]
+
+    subgraph "Cache System"
+        RESP --> CACHE[Global Cache]
+        CACHE --> |"Future similar events"| Q
+    end
+
+    style ES fill:#f96,stroke:#333,stroke-width:2px
+    style CACHE fill:#9cf,stroke:#333,stroke-width:2px
+```
+
+### Message Structure
+
+```mermaid
+classDiagram
+    class es_message_t {
+        +Metadata
+        +Process Information
+        +Event Specific Data
+    }
+
+    class Metadata {
+        +event_type
+        +time
+        +version
+        +is_auth_or_notify
+        +deadline (for AUTH)
+        +sequence_number
+    }
+
+    class ProcessInfo {
+        +executable_path
+        +pid
+        +uid
+        +code_signing_info
+        +audit_token
+    }
+
+    class EventSpecificData {
+        +exec_data (for EXEC)
+        +open_data (for OPEN)
+        +signal_data (for SIGNAL)
+        +etc...
+    }
+
+    es_message_t --> Metadata
+    es_message_t --> ProcessInfo
+    es_message_t --> EventSpecificData
+```
+
+### AUTH vs NOTIFY Events
 
 ```mermaid
 flowchart LR
@@ -33,42 +112,7 @@ flowchart LR
     style A fill:#faa,stroke:#a33,stroke-width:2px
 ```
 
-This diagram illustrates the two main types of EndpointSecurity events: NOTIFY and AUTH events, and their key differences.
-
-### EndpointSecurity Early Boot Process
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant System as macOS System
-    participant SysExt as System Extension
-    participant ES as EndpointSecurity Framework
-    participant Apps as Third-Party Apps
-
-    System->>System: Boot Start
-    System->>SysExt: Load Early Boot Extensions
-
-    SysExt->>ES: Initialize (es_new_client)
-    ES-->>SysExt: Client Handle
-
-    SysExt->>ES: First Subscribe Call
-    ES-->>SysExt: Subscription Result
-
-    alt All Early Boot Extensions Ready
-        System->>Apps: Allow Third-Party Apps to Execute
-    else Early Boot Deadline Expires
-        System->>System: Deadline Timer
-        System->>Apps: Force Allow Third-Party Apps
-    end
-
-    User->>System: Try to Use Apps
-
-    Note over User,Apps: System Extensions installed in /Applications<br>Protected by System Integrity Protection<br>Protected from root user unload
-```
-
-This sequence diagram shows how EndpointSecurity extensions are loaded during the early boot process and how they interact with the system.
-
-### EndpointSecurity Client Flow
+### Client Initialization and Event Flow
 
 ```mermaid
 sequenceDiagram
@@ -106,9 +150,7 @@ sequenceDiagram
     end
 ```
 
-This diagram demonstrates the typical flow of an EndpointSecurity client application, from initialization to event handling.
-
-### EndpointSecurity Caching System
+### Caching and Response Mechanism
 
 ```mermaid
 flowchart TD
@@ -156,41 +198,105 @@ flowchart TD
     style INVC fill:#f99,stroke:#333,stroke-width:2px
 ```
 
-This flowchart explains how the EndpointSecurity caching system works to improve performance and reduce redundant event processing.
-
-### EndpointSecurity Architecture
+### System Extension and Early Boot Process
 
 ```mermaid
-flowchart TD
-    K[Kernel Event] --> ES[EndpointSecurity Subsystem]
-    ES --> |"Intercept & Enrich"| MSG[Message Creation]
-    MSG --> |"Wrapped in envelope"| Q[Message Queue]
-    Q --> |"Simultaneously deliver to subscribed clients"| C1[ES Client 1]
-    Q --> |"Simultaneously deliver to subscribed clients"| C2[ES Client 2]
-    Q --> |"Simultaneously deliver to subscribed clients"| C3[ES Client 3]
+sequenceDiagram
+    participant User
+    participant System as macOS System
+    participant SysExt as System Extension
+    participant ES as EndpointSecurity Framework
+    participant Apps as Third-Party Apps
 
-    C1 --> |"if AUTH event"| R1[Response required]
-    C2 --> |"if AUTH event"| R2[Response required]
-    C3 --> |"if AUTH event"| R3[Response required]
+    System->>System: Boot Start
+    System->>SysExt: Load Early Boot Extensions
 
-    R1 --> RESP[Combined Response]
-    R2 --> RESP
-    R3 --> RESP
+    SysExt->>ES: Initialize (es_new_client)
+    ES-->>SysExt: Client Handle
 
-    RESP --> |"ALLOW/DENY"| K2[Kernel Operation Continues]
+    SysExt->>ES: First Subscribe Call
+    ES-->>SysExt: Subscription Result
 
-    subgraph "Cache System"
-        RESP --> CACHE[Global Cache]
-        CACHE --> |"Future similar events"| Q
+    alt All Early Boot Extensions Ready
+        System->>Apps: Allow Third-Party Apps to Execute
+    else Early Boot Deadline Expires
+        System->>System: Deadline Timer
+        System->>Apps: Force Allow Third-Party Apps
     end
 
-    style ES fill:#f96,stroke:#333,stroke-width:2px
-    style CACHE fill:#9cf,stroke:#333,stroke-width:2px
+    User->>System: Try to Use Apps
+
+    Note over User,Apps: System Extensions installed in /Applications<br>Protected by System Integrity Protection<br>Protected from root user unload
 ```
 
-This diagram provides an overview of the EndpointSecurity subsystem architecture and how events flow through the system.
+## Key Features
+
+### Event Types
+- **NOTIFY Events**: Informational events that tell you an operation is happening
+- **AUTH Events**: Control events that allow you to approve or deny operations
+
+### Implementation Benefits
+- C library for performance and compatibility (callable from Swift, Objective-C, Rust)
+- No kernel extension required
+- Enhanced system stability and security
+- Rich event stream (~100 event types)
+
+### Security Enhancements
+- System Extension provides System Integrity Protection
+- Protection from root user tampering
+- Early boot capability for security initialization before third-party apps
+
+### Performance Considerations
+- Caching mechanism to improve performance
+- Message muting to reduce event volume
+- Asynchronous processing recommended for AUTH events
+- Response deadlines must be respected
+
+## Getting Started
+
+### Requirements
+- Endpoint Security entitlement (restricted, requires approval)
+- Full Disk Access permissions (for privacy)
+- System Extension entitlement (if deployed as system extension)
+- User approval for installation
+
+### Basic Implementation Flow
+1. Initialize client with `es_new_client()`
+2. Set up event handler block
+3. Subscribe to events with `es_subscribe()`
+4. Process events in handler block
+5. For AUTH events, respond before deadline expires
+
+### Best Practices
+- Avoid time-of-check time-of-use issues
+- Use message muting to reduce event volume
+- Use caching for performance, not policy
+- Process messages asynchronously when possible
+- Split subscriptions across multiple clients if needed
+
+## Usage in Obsidian
+
+The Mermaid diagrams in this README are compatible with Obsidian and can be viewed directly in your Obsidian vault. Place this README in your vault and the diagrams will render automatically.
+
+For Obsidian usage, you can save these diagrams in separate files:
+- `assets/mermid/es-architecture.mermaid`
+- `assets/mermid/es-message-structure.mermaid`
+- `assets/mermid/es-event-types.mermaid`
+- `assets/mermid/es-client-flow.mermaid`
+- `assets/mermid/es-caching.mermaid`
+- `assets/mermid/es-early-boot.mermaid`
+
+Then reference them in your Obsidian notes using:
+```
+![[assets/mermid/es-architecture.mermaid]]
+```
+
+## References
+
+- [Apple Developer Documentation](https://developer.apple.com/documentation)
+- [WWDC Session: Build an Endpoint Security app](https://developer.apple.com/videos/play/wwdc2020/)
+- [System Extensions and DriverKit](https://developer.apple.com/videos/play/wwdc2019/)
 
 ## Notes
 
-- The diagrams are created using Mermaid syntax and can be viewed directly in GitHub.
-- For an interactive experience with these diagrams in Obsidian, clone this repository and open it as an Obsidian vault.
+This documentation is based on the EndpointSecurity Framework as described in WWDC presentations and official documentation. The framework continues to evolve with new macOS releases, adding events and capabilities.
